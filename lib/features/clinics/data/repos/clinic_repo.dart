@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:medica_admin/core/helpers/Image_Picker_helper.dart';
 import 'package:medica_admin/core/networking/api_service.dart';
 import '../models/clinic_model.dart';
 import '../models/clinic_details_model.dart';
@@ -34,7 +34,7 @@ class ClinicsRepo {
     return data.map((json) => ClinicDoctorModel.fromJson(json)).toList();
   }
 
-  // 4. إضافة عيادة جديدة (تستخدم Multipart لدعم رفع الصورة)
+  // 4. إضافة عيادة جديدة (استخدام PickedFileData بدلاً من XFile)
   Future<void> addClinic({
     required String name,
     required String address,
@@ -42,7 +42,7 @@ class ClinicsRepo {
     required String emergencyPhone,
     String? email,
     String? bankAccount,
-    File? logoFile,
+    PickedFileData? logoFile, // 👈 تغيير النوع لـ PickedFileData
   }) async {
     final Map<String, String> fields = {
       'name': name,
@@ -71,7 +71,7 @@ class ClinicsRepo {
     required String emergencyPhone,
     String? email,
     String? bankAccount,
-    File? logoFile,
+    PickedFileData? logoFile, // 👈 تغيير النوع لـ PickedFileData
   }) async {
     final Map<String, String> fields = {
       'name': name,

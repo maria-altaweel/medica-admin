@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:medica_admin/core/helpers/Image_Picker_helper.dart';
 
 abstract class ClinicsEvent {}
 
@@ -25,7 +25,7 @@ class AddClinicEvent extends ClinicsEvent {
   final String emergencyPhone;
   final String? email;
   final String? bankAccount;
-  final File? logoFile;
+  final PickedFileData? logoFile; // 👈 تغيير النوع لـ PickedFileData?
 
   AddClinicEvent({
     required this.name,
@@ -46,7 +46,7 @@ class UpdateClinicEvent extends ClinicsEvent {
   final String emergencyPhone;
   final String? email;
   final String? bankAccount;
-  final File? logoFile;
+  final PickedFileData? logoFile; // 👈 تغيير النوع لـ PickedFileData?
 
   UpdateClinicEvent({
     required this.clinicId,

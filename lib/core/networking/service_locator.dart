@@ -9,6 +9,11 @@ import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart
 
 import 'package:medica_admin/features/dashbord/data/repos/dashboard_repo.dart';
 import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboardhome_bloc.dart';
+import 'package:medica_admin/features/doctors/data/repos/doctor_repo.dart';
+import 'package:medica_admin/features/doctors/logic/doctor_cubit/doctor_cubit.dart';
+import 'package:medica_admin/features/secretaries/data/repos/secretary_repo.dart';
+import 'package:medica_admin/features/secretaries/data/repos/secretary_repo_imp.dart';
+import 'package:medica_admin/features/secretaries/logic/secretary_cubit/secretary_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -24,4 +29,14 @@ void setupServiceLocator() {
   getIt.registerFactory(() => DashboardHomeBloc(getIt()));
   getIt.registerLazySingleton<ClinicsRepo>(() => ClinicsRepo(getIt()));
   getIt.registerFactory<ClinicsBloc>(() => ClinicsBloc(getIt()));
+  getIt.registerLazySingleton<SecretaryRepo>(() => SecretaryRepoImpl(getIt()));
+  getIt.registerFactory<SecretaryCubit>(() => SecretaryCubit(getIt()));
+  // 1. Repository
+  getIt.registerLazySingleton<DoctorRepository>(
+    () => DoctorRepository(getIt<ApiService>()),
+  );
+  // 2. Cubit
+  getIt.registerFactory<DoctorCubit>(
+    () => DoctorCubit(getIt<DoctorRepository>()),
+  );
 }

@@ -4,9 +4,12 @@ import 'package:medica_admin/core/networking/service_locator.dart';
 import 'package:medica_admin/features/Auth/UI/login_page.dart';
 import 'package:medica_admin/features/Auth/logic/auth_bloc/auth_bloc.dart';
 import 'package:medica_admin/features/clinics/UI/pages/clinic_details_screen.dart';
+import 'package:medica_admin/features/clinics/UI/pages/clinics_screen.dart';
+import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart';
 import 'package:medica_admin/features/dashbord/UI/pages/admin_layout.dart';
 import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboardhome_bloc.dart';
 import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboardhome_event.dart';
+import 'package:medica_admin/features/doctors/logic/doctor_cubit/doctor_cubit.dart';
 import 'routes.dart';
 
 class AppRouter {
@@ -28,11 +31,42 @@ class AppRouter {
             child: const AdminLayout(),
           ),
         );
-      case Routes.clinicDetailsScreen:
-        final clinicId = settings.arguments as int; // نستقبل الـ ID المُمرر
+
+      // 🩺 مسار شاشة قائمة العيادات الرئيسية
+      case Routes.clinicsScreen:
         return MaterialPageRoute(
-          builder: (_) =>
-              AdminLayout(body: ClinicDetailsScreen(clinicId: clinicId)),
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ClinicsBloc>(),
+            child: const AdminLayout(body: ClinicsScreen()),
+          ),
+        );
+
+      // 🩺 مسار شاشة تفاصيل العيادة
+      case Routes.clinicDetailsScreen:
+        final clinicId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ClinicsBloc>(),
+            child: AdminLayout(body: ClinicDetailsScreen(clinicId: clinicId)),
+          ),
+        );
+
+      // 👨‍⚕️ مسار قائمة الأطباء (initialIndex: 2)
+      case Routes.doctorsScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<DoctorCubit>(),
+            child: const AdminLayout(initialIndex: 2),
+          ),
+        );
+
+      // 📋 مسار طلبات انضمام الأطباء (initialIndex: 3)
+      case Routes.doctorRequestsScreen:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<DoctorCubit>(),
+            child: const AdminLayout(initialIndex: 3),
+          ),
         );
 
       default:

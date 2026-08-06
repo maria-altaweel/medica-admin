@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:medica_admin/core/helpers/shared_pref_helper.dart'; // 👈 استيراد الـ SharedPrefHelper
 import 'package:medica_admin/features/Auth/data/model/admin_model.dart';
 
 import '../../data/repos/auth_repo.dart';
@@ -16,14 +17,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(LoginLoading());
     try {
-      // محاولة تسجيل الدخول عبر الـ Repo
+      // 1. محاولة تسجيل الدخول عبر الـ Repo
       final adminModel = await _authRepo.login(event.phone, event.password);
 
-      // إذا نجحت العملية
+      // 2. 🔑 حفظ التوكن في SharedPreferences قبل الانتقال (عدّل اسم الخاصية حسب موديلك token أو token)
+      if (adminModel.token != null) {
+        await SharedPrefHelper.saveAdminToken(adminModel.token!);
+      }
+
+      // 3. إرسال حالة النجاح للـ UI
       emit(LoginSuccess(adminModel: adminModel));
     } catch (e) {
-      // إذا حدث خطأ (سواء من السيرفر أو الشبكة)
-      // سنرسل نص الخطأ ليتم عرضه في الـ UI
+      // إذا حدث خطأ سنرسل نص الخطأ ليتم عرضه في الـ UI
       emit(LoginError(message: e.toString()));
     }
   }

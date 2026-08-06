@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data'; // 👈 بدلاً من dart:io لمنع أخطاء الويب
 import 'package:http/http.dart' as http;
+import 'package:medica_admin/core/helpers/Image_Picker_helper.dart';
 import 'package:medica_admin/core/helpers/constant.dart';
 import 'package:medica_admin/core/helpers/shared_pref_helper.dart';
 
@@ -32,8 +33,6 @@ class ApiService {
         body: jsonEncode(body),
       );
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة');
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
@@ -51,8 +50,6 @@ class ApiService {
         headers: headers,
       );
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة');
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
@@ -71,8 +68,6 @@ class ApiService {
         body: jsonEncode(body),
       );
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة');
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
@@ -89,8 +84,6 @@ class ApiService {
         headers: headers,
       );
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة');
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
@@ -98,11 +91,11 @@ class ApiService {
     }
   }
 
-  // دالة رفع الصور والملفات
+  // 🔑 دالة رفع الصور والملفات المتوافقة 100% مع الويب والموبايل
   Future<dynamic> postMultipart({
     required String endpoint,
     required Map<String, String> fields,
-    File? file,
+    PickedFileData? file, // 👈 تغيير النوع لـ PickedFileData
     required String fileKey,
     String? token,
   }) async {
@@ -119,16 +112,19 @@ class ApiService {
 
       request.fields.addAll(fields);
 
+      // 🔑 الحل الجذري للويب: رفع من الـ bytes بدلاً من path
       if (file != null) {
         request.files.add(
-          await http.MultipartFile.fromPath(fileKey, file.path),
+          http.MultipartFile.fromBytes(
+            fileKey,
+            file.bytes,
+            filename: file.name,
+          ),
         );
       }
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
       return _handleResponse(response);
-    } on SocketException {
-      throw Exception('لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة');
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
@@ -136,7 +132,7 @@ class ApiService {
     }
   }
 
-  // معالجة الردود باللغة العربية مباشرة وبدون لغات
+  // معالجة الردود
   dynamic _handleResponse(http.Response response) {
     dynamic body;
     try {
@@ -150,7 +146,7 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     } else if (response.statusCode == 401) {
-      SharedPrefHelper.removeAdminToken(); // حذف التوكن عند انتهاء الجلسة
+      SharedPrefHelper.removeAdminToken();
       throw Exception("انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى");
     } else {
       final errorMessage = body is Map

@@ -14,6 +14,7 @@ void main() async {
   // 2. التحقق من التوكن مرة واحدة عند فتح التطبيق
   final String? token = await SharedPrefHelper.getAdminToken();
   final bool isLoggedIn = token != null && token.isNotEmpty;
+  print("====maintoken:$token===");
 
   runApp(MedicaAdminApp(isLoggedIn: isLoggedIn));
 }
