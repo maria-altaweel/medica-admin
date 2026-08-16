@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:medica_admin/core/helpers/App_Colors.dart';
-
 import 'package:medica_admin/features/clinics/data/models/clinic_model.dart';
 
 class SelectClinicDialog extends StatefulWidget {
@@ -35,6 +34,9 @@ class _SelectClinicDialogState extends State<SelectClinicDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         width: 440,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -59,63 +61,74 @@ class _SelectClinicDialogState extends State<SelectClinicDialog> {
             ),
             const SizedBox(height: 16),
             Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: widget.clinics.map((clinic) {
-                    final isSelected = tempSelected?.id == clinic.id;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.lightPrimary
-                            : AppColors.cardBackground,
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.borderColor,
+              child: widget.clinics.isEmpty
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text(
+                          'لا توجد عيادات متاحة',
+                          style: TextStyle(color: AppColors.textSecondary),
                         ),
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: ListTile(
-                        leading: Radio<int>(
-                          value: clinic.id,
-                          groupValue: tempSelected?.id,
-                          activeColor: AppColors.primary,
-                          onChanged: (_) {
-                            setState(() {
-                              tempSelected = clinic;
-                            });
-                          },
-                        ),
-                        title: Text(
-                          clinic.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: AppColors.textPrimary,
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: widget.clinics.length,
+                      itemBuilder: (context, index) {
+                        final clinic = widget.clinics[index];
+                        final isSelected = tempSelected?.id == clinic.id;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.lightPrimary
+                                : AppColors.cardBackground,
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.borderColor,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        subtitle: Text(
-                          clinic.address ?? '',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
+                          child: ListTile(
+                            leading: Radio<int>(
+                              value: clinic.id,
+                              groupValue: tempSelected?.id,
+                              activeColor: AppColors.primary,
+                              onChanged: (_) {
+                                setState(() {
+                                  tempSelected = clinic;
+                                });
+                              },
+                            ),
+                            title: Text(
+                              clinic.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            subtitle: Text(
+                              clinic.address ?? '',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.local_hospital_outlined,
+                              color: AppColors.primary,
+                            ),
+                            onTap: () {
+                              setState(() {
+                                tempSelected = clinic;
+                              });
+                            },
                           ),
-                        ),
-                        trailing: const Icon(
-                          Icons.local_hospital_outlined,
-                          color: AppColors.primary,
-                        ),
-                        onTap: () {
-                          setState(() {
-                            tempSelected = clinic;
-                          });
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+                        );
+                      },
+                    ),
             ),
             const SizedBox(height: 16),
             SizedBox(

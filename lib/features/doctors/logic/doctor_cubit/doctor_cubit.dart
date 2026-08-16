@@ -13,7 +13,28 @@ class DoctorCubit extends Cubit<DoctorState> {
   List<DoctorModel> requestsList = [];
   List<DoctorScheduleModel> schedulesList = [];
 
-  /// 1. جلب قائمة الأطباء
+  // متغير البحث المحلي بالاسم أو رقم الهاتف
+  String searchQuery = '';
+
+  /// دالة تعطينا القائمة المفلترة فوراً للـ UI بناءً على البحث المحلي
+  List<DoctorModel> get filteredDoctorsList {
+    if (searchQuery.trim().isEmpty) return doctorsList;
+
+    final query = searchQuery.trim().toLowerCase();
+    return doctorsList.where((doctor) {
+      final matchesName = doctor.doctorName.toLowerCase().contains(query);
+      final matchesPhone = doctor.doctorPhone.toLowerCase().contains(query);
+      return matchesName || matchesPhone;
+    }).toList();
+  }
+
+  /// دالة تحديث نص البحث وإعادة بناء القائمة محلياً
+  void setSearchQuery(String query) {
+    searchQuery = query;
+    emit(GetDoctorsSuccessState());
+  }
+
+  /// 1. جلب قائمة الأطباء الخاصة بالعيادة
   Future<void> fetchDoctors(int clinicId, {String? status}) async {
     emit(GetDoctorsLoadingState());
     try {
@@ -51,10 +72,10 @@ class DoctorCubit extends Cubit<DoctorState> {
         clinicId: clinicId,
         clinicDoctorId: clinicDoctorId,
       );
-      // إعادة جلب القوائم لتحديث الواجهة فوراً
-      await fetchDoctorRequests(clinicId);
-      await fetchDoctors(clinicId);
       emit(ActionDoctorRequestSuccessState(message));
+      // تحديث القوائم بعد إبلاغ الواجهة بالنجاح
+      fetchDoctorRequests(clinicId);
+      fetchDoctors(clinicId);
     } catch (e) {
       emit(
         ActionDoctorRequestErrorState(
@@ -75,8 +96,10 @@ class DoctorCubit extends Cubit<DoctorState> {
         clinicId: clinicId,
         clinicDoctorId: clinicDoctorId,
       );
-      await fetchDoctorRequests(clinicId);
       emit(ActionDoctorRequestSuccessState(message));
+      // تحديث قائمة الطلبات بعد إبلاغ الواجهة بالنجاح
+      fetchDoctorRequests(clinicId);
+      fetchDoctors(clinicId);
     } catch (e) {
       emit(
         ActionDoctorRequestErrorState(
@@ -103,13 +126,42 @@ class DoctorCubit extends Cubit<DoctorState> {
         salaryPercentage: salaryPercentage,
         isAvailable: isAvailable,
       );
-      await fetchDoctors(clinicId);
       emit(UpdateDoctorSuccessState(message));
+      fetchDoctors(clinicId);
     } catch (e) {
-      emit(UpdateDoctorErrorState(e.toString().replaceAll("Exception: ", "")));
+      String errorMessage = "حدث خطأ غير متوقع، يرجى المحاولة مجدداً";
+
+      final errorStr = e.toString().toLowerCase();
+
+      // 1️⃣ أولاً: التحقق من أخطاء الإنترنت والاتصال
+      if (errorStr.contains('socketexception') ||
+          errorStr.contains('connection refused') ||
+          errorStr.contains('network is unreachable') ||
+          errorStr.contains('failed host lookup') ||
+          errorStr.contains('timeout')) {
+        errorMessage =
+            "لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة والمحاولة مجدداً";
+      }
+      // 2️⃣ ثانياً: إذا كان الخطأ قادماً من الـ API (مثل DioException أو رسالة من الباك إند)
+      else {
+        // تنظيف النص وإزالة كلمة Exception إن وجدت
+        String cleanError = e.toString().replaceAll("Exception: ", "").trim();
+
+        // إذا كانت الرسالة عبارة عن خطأ تقني بحت من Dio ولا تفيد المستخدم، نعطيه رسالة بديلة لطيفة
+        if (cleanError.isNotEmpty && !cleanError.contains("DioException")) {
+          errorMessage =
+              cleanError; // هنا ستظهر رسالة السيرفر الواضحة (إذا كانت مرسلة من الباك إند)
+        } else {
+          errorMessage = "حدث خطأ أثناء معالجة الطلب، يرجى المحاولة لاحقاً";
+        }
+      }
+
+      // إرسال الخطأ الواضح للـ UI ليتم عرضه بـ Appsnackbar
+      emit(UpdateDoctorErrorState(errorMessage));
     }
   }
 
+  /// 6. إزالة الطبيب من العيادة
   /// 6. إزالة الطبيب من العيادة
   Future<void> removeDoctor({
     required int clinicId,
@@ -121,10 +173,36 @@ class DoctorCubit extends Cubit<DoctorState> {
         clinicId: clinicId,
         clinicDoctorId: clinicDoctorId,
       );
-      await fetchDoctors(clinicId);
-      emit(RemoveDoctorSuccessState(message));
+
+      // تعريب رسالة النجاح بشكل أنيق وواضح
+      const arabicSuccessMessage = "تمت إزالة الطبيب من العيادة بنجاح ✅";
+
+      emit(RemoveDoctorSuccessState(arabicSuccessMessage));
+
+      // تحديث قائمة الأطباء
+      fetchDoctors(clinicId);
     } catch (e) {
-      emit(RemoveDoctorErrorState(e.toString().replaceAll("Exception: ", "")));
+      String errorMessage = "حدث خطأ غير متوقع، يرجى المحاولة مجدداً";
+
+      final errorStr = e.toString().toLowerCase();
+
+      if (errorStr.contains('connection refused') ||
+          errorStr.contains('network is unreachable') ||
+          errorStr.contains('timeout')) {
+        errorMessage =
+            "لا يوجد اتصال بالإنترنت، يرجى التحقق من الشبكة والمحاولة مجدداً";
+      } else {
+        String cleanError = e.toString().replaceAll("Exception: ", "").trim();
+
+        if (cleanError.isNotEmpty && !cleanError.contains("DioException")) {
+          errorMessage = cleanError; // رسالة الخطأ الواضحة إن وجدت من السيرفر
+        } else {
+          errorMessage = "فشل في إزالة الطبيب، يرجى المحاولة لاحقاً ❌";
+        }
+      }
+
+      // إرسال الخطأ الواضح للـ UI ليتم عرضه بـ Appsnackbar
+      emit(RemoveDoctorErrorState(errorMessage));
     }
   }
 
@@ -158,8 +236,9 @@ class DoctorCubit extends Cubit<DoctorState> {
         clinicDoctorId: clinicDoctorId,
         schedules: schedules,
       );
-      await fetchSchedules(clinicId: clinicId, clinicDoctorId: clinicDoctorId);
       emit(SetSchedulesSuccessState(message));
+      // إعادة جلب الجدول المحدث
+      fetchSchedules(clinicId: clinicId, clinicDoctorId: clinicDoctorId);
     } catch (e) {
       emit(SetSchedulesErrorState(e.toString().replaceAll("Exception: ", "")));
     }

@@ -7,12 +7,13 @@ class DoctorRepository {
 
   DoctorRepository(this._apiService);
 
-  /// 1. جلب قائمة الأطباء في عيادة معينة (مع إمكانية الفلترة بالـ status)
+  /// 1. جلب قائمة الأطباء في عيادة معينة (مع الفلترة بالحالة فقط من السيرفر)
   Future<List<DoctorModel>> getDoctors({
     required int clinicId,
     String? status,
   }) async {
-    String endpoint = "admin/clinics/$clinicId/doctors";
+    String endpoint = "admin/clinics/$clinicId/doctors/list";
+
     if (status != null && status.isNotEmpty) {
       endpoint += "?status=$status";
     }
@@ -36,9 +37,10 @@ class DoctorRepository {
     required int clinicId,
     required int clinicDoctorId,
   }) async {
-    final response = await _apiService.post(
+    // تم تغيير post إلى put وتمرير الـ body كـ Named Parameter
+    final response = await _apiService.put(
       "admin/clinics/$clinicId/doctors/$clinicDoctorId/accept",
-      {},
+      body: {},
     );
     return response['message'] ?? "تم قبول طلب الطبيب بنجاح";
   }
@@ -48,9 +50,10 @@ class DoctorRepository {
     required int clinicId,
     required int clinicDoctorId,
   }) async {
-    final response = await _apiService.post(
+    // تم تغيير post إلى put وتمرير الـ body كـ Named Parameter
+    final response = await _apiService.put(
       "admin/clinics/$clinicId/doctors/$clinicDoctorId/reject",
-      {},
+      body: {},
     );
     return response['message'] ?? "تم رفض طلب الطبيب";
   }
@@ -67,6 +70,7 @@ class DoctorRepository {
     if (consultationFee != null) body['consultation_fee'] = consultationFee;
     if (salaryPercentage != null) body['salary_percentage'] = salaryPercentage;
     if (isAvailable != null) body['is_available'] = isAvailable;
+    print('🚀 Sending Update Body: $body');
 
     final response = await _apiService.put(
       "admin/clinics/$clinicId/doctors/$clinicDoctorId",
@@ -99,16 +103,16 @@ class DoctorRepository {
   }
 
   /// 8. حفظ/تحديث جدول عمل الطبيب بالكامل
+  /// 8. حفظ/تحديث جدول عمل الطبيب بالكامل
   Future<String> setDoctorSchedules({
     required int clinicId,
     required int clinicDoctorId,
     required List<DoctorScheduleModel> schedules,
   }) async {
     final body = {'schedules': schedules.map((s) => s.toJson()).toList()};
-
-    final response = await _apiService.post(
+    final response = await _apiService.put(
       "admin/clinics/$clinicId/doctors/$clinicDoctorId/schedules",
-      body,
+      body: body,
     );
     return response['message'] ?? "تم تحديث جدول العمل بنجاح";
   }

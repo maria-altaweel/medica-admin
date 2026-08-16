@@ -36,7 +36,7 @@ class ApiService {
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
-      throw Exception("حدث خطأ غير متوقع: ${e.toString()}");
+      throw Exception(e.toString().replaceAll("Exception: ", ""));
     }
   }
 
@@ -53,7 +53,7 @@ class ApiService {
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
-      throw Exception("حدث خطأ غير متوقع: ${e.toString()}");
+      throw Exception(e.toString().replaceAll("Exception: ", ""));
     }
   }
 
@@ -71,7 +71,7 @@ class ApiService {
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
-      throw Exception("حدث خطأ غير متوقع: ${e.toString()}");
+      throw Exception(e.toString().replaceAll("Exception: ", ""));
     }
   }
 
@@ -87,7 +87,7 @@ class ApiService {
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
-      throw Exception("حدث خطأ غير متوقع: ${e.toString()}");
+      throw Exception(e.toString().replaceAll("Exception: ", ""));
     }
   }
 
@@ -128,7 +128,7 @@ class ApiService {
     } on http.ClientException {
       throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
     } catch (e) {
-      throw Exception("حدث خطأ غير متوقع: ${e.toString()}");
+      throw Exception(e.toString().replaceAll("Exception: ", ""));
     }
   }
 
@@ -148,6 +148,24 @@ class ApiService {
     } else if (response.statusCode == 401) {
       SharedPrefHelper.removeAdminToken();
       throw Exception("انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى");
+    } else if (response.statusCode == 422) {
+      // 🔑 التقاط أخطاء الـ Validation الدقيقة من لارافيل
+      if (body is Map && body.containsKey('errors') && body['errors'] is Map) {
+        final Map<String, dynamic> errors = body['errors'];
+        if (errors.isNotEmpty) {
+          // استخراج أول خطأ من أول حقل وإرجاعه
+          final firstKey = errors.keys.first;
+          final firstErrorList = errors[firstKey];
+          if (firstErrorList is List && firstErrorList.isNotEmpty) {
+            throw Exception(firstErrorList.first.toString());
+          }
+        }
+      }
+      // في حال كان خطأ Custom بدون حقل errors (مثل: end_time must be after start_time)
+      final errorMessage = body is Map
+          ? (body['message'] ?? "البيانات المدخلة غير صالحة")
+          : "البيانات المدخلة غير صالحة";
+      throw Exception(errorMessage);
     } else {
       final errorMessage = body is Map
           ? (body['message'] ?? "حدث خطأ ما في السيرفر")

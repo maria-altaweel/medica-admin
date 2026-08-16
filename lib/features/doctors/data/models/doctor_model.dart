@@ -25,17 +25,27 @@ class DoctorModel {
 
   factory DoctorModel.fromJson(Map<String, dynamic> json) {
     return DoctorModel(
-      id: json['id'] ?? 0,
-      doctorId: json['doctor_id'] ?? 0,
+      id: _parseNum(json['id']).toInt(),
+      doctorId: _parseNum(json['doctor_id']).toInt(),
       doctorName: json['doctor_name'] ?? '',
       doctorPhone: json['doctor_phone'] ?? '',
       specialization: json['specialization'] ?? '',
       status: json['status'] ?? 'pending',
-      consultationFee: json['consultation_fee'] ?? 0,
-      salaryPercentage: json['salary_percentage'],
+      consultationFee: _parseNum(json['consultation_fee']),
+      salaryPercentage: json['salary_percentage'] != null
+          ? _parseNum(json['salary_percentage'])
+          : null,
       isAvailable: json['is_available'] == 1 || json['is_available'] == true,
       profile: json['profile'],
     );
+  }
+
+  // دالة مساعدة لتحويل أي قيمة (String أو int أو double) إلى num بأمان تام
+  static num _parseNum(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value;
+    if (value is String) return num.tryParse(value) ?? 0;
+    return 0;
   }
 
   Map<String, dynamic> toJson() {

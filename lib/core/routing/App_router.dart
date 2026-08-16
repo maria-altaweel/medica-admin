@@ -9,6 +9,8 @@ import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart
 import 'package:medica_admin/features/dashbord/UI/pages/admin_layout.dart';
 import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboardhome_bloc.dart';
 import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboardhome_event.dart';
+import 'package:medica_admin/features/doctors/UI/pages/doctor_schedule_screen.dart';
+import 'package:medica_admin/features/doctors/data/repos/doctor_repo.dart';
 import 'package:medica_admin/features/doctors/logic/doctor_cubit/doctor_cubit.dart';
 import 'routes.dart';
 
@@ -66,6 +68,17 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (context) => getIt<DoctorCubit>(),
             child: const AdminLayout(initialIndex: 3),
+          ),
+        );
+      case Routes.doctorScheduleScreen:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => AdminLayout(
+            body: DoctorScheduleScreen(
+              clinicId: args['clinicId'],
+              clinicDoctorId: args['clinicDoctorId'],
+              doctorRepository: getIt<DoctorRepository>(),
+            ),
           ),
         );
 
