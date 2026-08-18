@@ -11,6 +11,12 @@ import 'package:medica_admin/features/dashbord/data/repos/dashboard_repo.dart';
 import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboardhome_bloc.dart';
 import 'package:medica_admin/features/doctors/data/repos/doctor_repo.dart';
 import 'package:medica_admin/features/doctors/logic/doctor_cubit/doctor_cubit.dart';
+import 'package:medica_admin/features/leaves/data/repos/leave_repo.dart';
+import 'package:medica_admin/features/leaves/logic/leave_cubit/leave_cubit.dart';
+import 'package:medica_admin/features/salaries/data/repos/salary_repo.dart';
+import 'package:medica_admin/features/salaries/data/repos/salary_repo_imp.dart';
+import 'package:medica_admin/features/salaries/logic/salary_cubit/salary_cubit.dart';
+
 import 'package:medica_admin/features/secretaries/data/repos/secretary_repo.dart';
 import 'package:medica_admin/features/secretaries/data/repos/secretary_repo_imp.dart';
 import 'package:medica_admin/features/secretaries/logic/secretary_cubit/secretary_cubit.dart';
@@ -31,12 +37,19 @@ void setupServiceLocator() {
   getIt.registerFactory<ClinicsBloc>(() => ClinicsBloc(getIt()));
   getIt.registerLazySingleton<SecretaryRepo>(() => SecretaryRepoImpl(getIt()));
   getIt.registerFactory<SecretaryCubit>(() => SecretaryCubit(getIt()));
-  // 1. Repository
   getIt.registerLazySingleton<DoctorRepository>(
     () => DoctorRepository(getIt<ApiService>()),
   );
-  // 2. Cubit
   getIt.registerFactory<DoctorCubit>(
     () => DoctorCubit(getIt<DoctorRepository>()),
   );
+  // 1. تسجيل الـ Repository (إذا لم تكن مسجلة مسبقاً)
+  getIt.registerLazySingleton<LeaveRepository>(() => LeaveRepository(getIt()));
+
+  // 2. تسجيل الـ LeaveCubit (يُفضل registerFactory لكي يتم إنشاء نسخة نظيفة عند كل فتح للصفحة)
+  getIt.registerFactory(() => LeaveCubit(getIt<LeaveRepository>()));
+  getIt.registerLazySingleton<SalaryRepo>(
+    () => SalaryRepoImpl(getIt<ApiService>()),
+  );
+  getIt.registerFactory(() => SalaryCubit(getIt<SalaryRepo>()));
 }

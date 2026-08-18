@@ -6,7 +6,12 @@ import 'package:medica_admin/features/clinics/UI/pages/clinics_screen.dart';
 import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart';
 import 'package:medica_admin/features/dashbord/UI/pages/dashbord_page.dart';
 import 'package:medica_admin/features/doctors/logic/doctor_cubit/doctor_cubit.dart';
-import 'package:medica_admin/features/doctors/ui/pages/doctors_screen.dart'; // 👈 استيراد شاشة الأطباء
+import 'package:medica_admin/features/doctors/ui/pages/doctors_screen.dart';
+import 'package:medica_admin/features/leaves/UI/pages/leaves_requests_screen.dart';
+import 'package:medica_admin/features/leaves/logic/leave_cubit/leave_cubit.dart';
+import 'package:medica_admin/features/salaries/UI/pages/create_salary_screen.dart';
+import 'package:medica_admin/features/salaries/UI/pages/salaries_screen.dart';
+import 'package:medica_admin/features/salaries/logic/salary_cubit/salary_cubit.dart';
 import 'package:medica_admin/features/secretaries/UI/pages/seretaries_screen.dart';
 import 'package:medica_admin/features/secretaries/logic/secretary_cubit/secretary_cubit.dart';
 
@@ -50,31 +55,52 @@ class _AdminLayoutState extends State<AdminLayout> {
 
   @override
   Widget build(BuildContext context) {
-    // 🎯 قائمة الصفحات متطابقة مع أرقام الاندكس
+    // 0: لوحة التحكم
+    // 1: العيادات
+    // 2: الأطباء
+    // 3: طلبات انضمام الأطباء
+    // 4: طلبات الإجازة
+    // 5: قائمة الرواتب (جديد)
+    // 6: إنشاء رواتب (جديد)
+    // 7: السكرتارية (كان 6)
+    // 8: الإعدادات (كان 7)
     final List<Widget> pages = [
-      const DashboardHomeWrapper(), // 0: لوحة التحكم
+      const DashboardHomeWrapper(),
       BlocProvider(
-        // 1: العيادات
         create: (context) => getIt<ClinicsBloc>(),
         child: const ClinicsScreen(),
       ),
-      // 2: قائمة الأطباء 🩺
       BlocProvider(
         create: (context) => getIt<DoctorCubit>(),
         child: const DoctorsScreen(isRequestsView: false),
       ),
-      // 3: طلبات انضمام الأطباء 📋
       BlocProvider(
         create: (context) => getIt<DoctorCubit>(),
         child: const DoctorsScreen(isRequestsView: true),
       ),
-      const Center(child: Text('صفحة المرضى')), // 4: المرضى
       BlocProvider(
-        // 5: السكرتارية
+        create: (context) => getIt<LeaveCubit>(),
+        child: const LeaveRequestsScreen(),
+      ),
+      BlocProvider(
+        create: (context) => getIt<SalaryCubit>(),
+        child: SalariesScreen(
+          onNavigateToCreateSalary: () {
+            _onSidebarItemSelected(
+              6,
+            ); // الانتقال للتاب رقم 6 (صفحة إنشاء رواتب)
+          },
+        ),
+      ),
+      BlocProvider(
+        create: (context) => getIt<SalaryCubit>(),
+        child: const CreateSalaryScreen(),
+      ),
+      BlocProvider(
         create: (context) => getIt<SecretaryCubit>(),
         child: const SecretariesScreen(),
-      ),
-      const Center(child: Text('صفحة الإعدادات')), // 6: الإعدادات
+      ), // 7
+      const Center(child: Text('صفحة الإعدادات')), // 8
     ];
 
     return Directionality(
@@ -84,13 +110,11 @@ class _AdminLayoutState extends State<AdminLayout> {
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // السايد بار
             Container(
               width: 260,
               color: const Color(0xFF0F172A),
               child: Column(
                 children: [
-                  // بيانات المدير
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
@@ -125,8 +149,6 @@ class _AdminLayoutState extends State<AdminLayout> {
                     ),
                   ),
                   const Divider(color: Color(0xFF334155), height: 1),
-
-                  // أزرار السايد بار
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -144,62 +166,64 @@ class _AdminLayoutState extends State<AdminLayout> {
                           () => _onSidebarItemSelected(1),
                         ),
 
-                        // 🩺 ExpansionTile للأطباء والقوائم الفرعية
-                        Theme(
-                          data: Theme.of(
-                            context,
-                          ).copyWith(dividerColor: Colors.transparent),
-                          child: ExpansionTile(
-                            leading: const Icon(
-                              Icons.medical_services_outlined,
-                              color: Colors.white,
-                              size: 20,
+                        // قائمة الأطباء
+                        _buildExpansionTile(
+                          icon: Icons.medical_services_outlined,
+                          title: 'الأطباء',
+                          isExpanded:
+                              _selectedIndex == 2 || _selectedIndex == 3,
+                          children: [
+                            _buildSubSidebarItem(
+                              'قائمة الأطباء',
+                              _selectedIndex == 2 && _currentCustomBody == null,
+                              () => _onSidebarItemSelected(2),
                             ),
-                            title: const Text(
-                              'الأطباء',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                              ),
+                            _buildSubSidebarItem(
+                              'طلبات الانضمام',
+                              _selectedIndex == 3 && _currentCustomBody == null,
+                              () => _onSidebarItemSelected(3),
                             ),
-                            iconColor: Colors.white,
-                            collapsedIconColor: Colors.white,
-                            initiallyExpanded:
-                                _selectedIndex == 2 || _selectedIndex == 3,
-                            children: [
-                              _buildSubSidebarItem(
-                                'قائمة الأطباء',
-                                _selectedIndex == 2 &&
-                                    _currentCustomBody == null,
-                                () => _onSidebarItemSelected(2),
-                              ),
-                              _buildSubSidebarItem(
-                                'طلبات الانضمام',
-                                _selectedIndex == 3 &&
-                                    _currentCustomBody == null,
-                                () => _onSidebarItemSelected(3),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
 
                         _buildSidebarItem(
-                          Icons.people_outline,
-                          'المرضى',
+                          Icons.date_range_outlined,
+                          'طلبات الإجازة',
                           _selectedIndex == 4 && _currentCustomBody == null,
                           () => _onSidebarItemSelected(4),
                         ),
+
+                        // قائمة الرواتب (جديد)
+                        _buildExpansionTile(
+                          icon: Icons.payments_outlined,
+                          title: 'الرواتب',
+                          isExpanded:
+                              _selectedIndex == 5 || _selectedIndex == 6,
+                          children: [
+                            _buildSubSidebarItem(
+                              'قائمة الرواتب',
+                              _selectedIndex == 5 && _currentCustomBody == null,
+                              () => _onSidebarItemSelected(5),
+                            ),
+                            _buildSubSidebarItem(
+                              'إنشاء رواتب',
+                              _selectedIndex == 6 && _currentCustomBody == null,
+                              () => _onSidebarItemSelected(6),
+                            ),
+                          ],
+                        ),
+
                         _buildSidebarItem(
                           Icons.badge_outlined,
                           'السكرتارية',
-                          _selectedIndex == 5 && _currentCustomBody == null,
-                          () => _onSidebarItemSelected(5),
+                          _selectedIndex == 7 && _currentCustomBody == null,
+                          () => _onSidebarItemSelected(7),
                         ),
                         _buildSidebarItem(
                           Icons.settings_outlined,
                           'الإعدادات',
-                          _selectedIndex == 6 && _currentCustomBody == null,
-                          () => _onSidebarItemSelected(6),
+                          _selectedIndex == 8 && _currentCustomBody == null,
+                          () => _onSidebarItemSelected(8),
                         ),
                       ],
                     ),
@@ -207,7 +231,6 @@ class _AdminLayoutState extends State<AdminLayout> {
                 ],
               ),
             ),
-            // المحتوى الرئيسي
             Expanded(
               child:
                   _currentCustomBody ??
@@ -215,6 +238,29 @@ class _AdminLayoutState extends State<AdminLayout> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // المساعد لإنشاء القائمة المنسدلة (ExpansionTile)
+  Widget _buildExpansionTile({
+    required IconData icon,
+    required String title,
+    required bool isExpanded,
+    required List<Widget> children,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        leading: Icon(icon, color: Colors.white, size: 20),
+        title: Text(
+          title,
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+        ),
+        iconColor: Colors.white,
+        collapsedIconColor: Colors.white,
+        initiallyExpanded: isExpanded,
+        children: children,
       ),
     );
   }
@@ -242,7 +288,6 @@ class _AdminLayoutState extends State<AdminLayout> {
     );
   }
 
-  // ودجت المكونات الفرعية لداخل الأطباء
   Widget _buildSubSidebarItem(String title, bool isActive, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(right: 36, left: 12, top: 2, bottom: 2),

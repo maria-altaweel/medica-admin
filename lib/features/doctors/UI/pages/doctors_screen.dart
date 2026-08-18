@@ -23,6 +23,7 @@ class DoctorsScreen extends StatefulWidget {
 
 class _DoctorsScreenState extends State<DoctorsScreen> {
   ClinicModel? selectedClinic;
+  String? selectedStatus;
 
   @override
   void didUpdateWidget(covariant DoctorsScreen oldWidget) {
@@ -32,7 +33,6 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
     }
   }
 
-  // جلب البيانات بناءً على العيادة المختارة فقط
   void _loadDoctorsData(BuildContext context) {
     if (selectedClinic == null) return;
 
@@ -40,26 +40,26 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
     if (widget.isRequestsView) {
       doctorCubit.fetchDoctorRequests(selectedClinic!.id);
     } else {
-      doctorCubit.fetchDoctors(selectedClinic!.id);
+      doctorCubit.fetchDoctors(selectedClinic!.id, status: selectedStatus);
     }
   }
 
-  // نافذة اختيار العيادة فقط
-  void _openSelectClinicDialog(
-    BuildContext currentContext,
-    List<ClinicModel> clinics,
-  ) {
+  void _openSelectClinicDialog(BuildContext currentContext) {
     showDialog(
       context: currentContext,
-      builder: (_) => SelectClinicDialog(
-        clinics: clinics,
-        selectedClinic: selectedClinic,
-        onClinicSelected: (clinic) {
-          setState(() {
-            selectedClinic = clinic;
-          });
-          _loadDoctorsData(currentContext);
-        },
+      builder: (_) => BlocProvider(
+        create: (context) => getIt<ClinicsBloc>()..add(FetchClinicsEvent()),
+        child: SelectClinicDialog(
+          clinics: const [],
+          selectedClinic: selectedClinic,
+          onClinicSelected: (clinic) {
+            setState(() {
+              selectedClinic = clinic;
+              selectedStatus = null;
+            });
+            _loadDoctorsData(currentContext);
+          },
+        ),
       ),
     );
   }
@@ -81,7 +81,6 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               padding: const EdgeInsets.all(24.0),
               child: BlocConsumer<ClinicsBloc, ClinicsState>(
                 listener: (context, state) {
-                  // اختيار أول عيادة تلقائياً وجلب أطبائها
                   if (state is ClinicsSuccessState &&
                       state.clinics.isNotEmpty) {
                     if (selectedClinic == null) {
@@ -102,15 +101,9 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                   }
                 },
                 builder: (context, state) {
-                  List<ClinicModel> availableClinics = [];
-                  if (state is ClinicsSuccessState) {
-                    availableClinics = state.clinics;
-                  }
-
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // الهيدر الرئيسي مع زر تحديث القائمة يدوياً (بدون سناك بار)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -121,20 +114,15 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                                   : 'الأطباء',
                               selectedClinicName:
                                   selectedClinic?.name ?? 'اختر العيادة',
-                              onChangeClinicTap: () => _openSelectClinicDialog(
-                                context,
-                                availableClinics,
-                              ),
+                              onChangeClinicTap: () =>
+                                  _openSelectClinicDialog(context),
                             ),
                           ),
-                          // زر التحديث العلوي البسيط
                           if (selectedClinic != null) ...[
                             const SizedBox(width: 16),
                             IconButton(
                               onPressed: () {
-                                _loadDoctorsData(
-                                  context,
-                                ); // يتم التحديث بصمت وبدون سناك بار مزعجة
+                                _loadDoctorsData(context);
                               },
                               icon: const Icon(
                                 Icons.refresh,
@@ -145,8 +133,12 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                           ],
                         ],
                       ),
+                      if (!widget.isRequestsView && selectedClinic != null) ...[
+                        const SizedBox(height: 24),
+                        _buildFilterTabs(innerContext),
+                      ],
                       const SizedBox(height: 24),
-                      Expanded(child: _buildBodyContent(context, state)),
+                      Expanded(child: _buildBodyContent(innerContext, state)),
                     ],
                   );
                 },
@@ -154,6 +146,59 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFilterTabs(BuildContext context) {
+    return Row(
+      children: [
+        _buildFilterTab(context, title: 'الكل', value: null),
+        const SizedBox(width: 12),
+        _buildFilterTab(context, title: 'مقبول', value: 'approved'),
+        const SizedBox(width: 12),
+        _buildFilterTab(context, title: 'معلق', value: 'pending'),
+        const SizedBox(width: 12),
+        _buildFilterTab(context, title: 'مرفوض', value: 'rejected'),
+      ],
+    );
+  }
+
+  Widget _buildFilterTab(
+    BuildContext context, {
+    required String title,
+    required String? value,
+  }) {
+    final isSelected = selectedStatus == value;
+    return InkWell(
+      onTap: () {
+        if (selectedStatus != value) {
+          setState(() {
+            selectedStatus = value;
+          });
+          _loadDoctorsData(context);
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : Colors.grey.withOpacity(0.5),
+          ),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
@@ -169,21 +214,19 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
       return Center(
         child: Text(
           'حدث خطأ أثناء تحميل العيادات: ${state.errorMessage}',
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
+          style: const TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
     }
-
     if (selectedClinic == null) {
       return const Center(
         child: Text(
           'لا توجد عيادات متاحة حالياً',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
     }
 
-    // عرض الجدول مباشرة بدون تعقيد
     return widget.isRequestsView
         ? DoctorRequestsTable(clinicId: selectedClinic!.id)
         : DoctorsTable(clinicId: selectedClinic!.id);

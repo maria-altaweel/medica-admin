@@ -7,16 +7,29 @@ class SecretariesHeader extends StatelessWidget {
   final List<ClinicModel> clinics;
   final int? selectedClinicId;
   final ValueChanged<int?> onClinicChanged;
+  final VoidCallback?
+  onOpenClinicDialog; // 👈 أضفنا هذا الإجراء لفتح الديالوج الموحد
 
   const SecretariesHeader({
     super.key,
     required this.clinics,
     required this.selectedClinicId,
     required this.onClinicChanged,
+    this.onOpenClinicDialog,
   });
 
   @override
   Widget build(BuildContext context) {
+    // العثور على اسم العيادة الحالية لعرضها داخل الزر
+    ClinicModel? currentClinic;
+    try {
+      if (selectedClinicId != null && clinics.isNotEmpty) {
+        currentClinic = clinics.firstWhere((c) => c.id == selectedClinicId);
+      }
+    } catch (_) {
+      currentClinic = clinics.isNotEmpty ? clinics.first : null;
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -51,25 +64,46 @@ class SecretariesHeader extends StatelessWidget {
             ),
             const SizedBox(width: 16),
 
-            // قائمة اختيار العيادة (Filter Dropdown)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.borderColor),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: selectedClinicId,
-                  hint: const Text("اختر العيادة لعرض السكرتارية"),
-                  items: clinics.map((clinic) {
-                    return DropdownMenuItem<int>(
-                      value: clinic.id,
-                      child: Text(clinic.name),
-                    );
-                  }).toList(),
-                  onChanged: onClinicChanged,
+            // زر اختيار العيادة الذي يفتح الـ SelectClinicDialog الموحد
+            InkWell(
+              onTap: () {
+                if (onOpenClinicDialog != null) {
+                  onOpenClinicDialog!();
+                }
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.borderColor),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.local_hospital,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      currentClinic?.name ?? "اختر العيادة",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
                 ),
               ),
             ),

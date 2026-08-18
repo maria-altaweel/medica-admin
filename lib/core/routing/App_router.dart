@@ -12,6 +12,7 @@ import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboar
 import 'package:medica_admin/features/doctors/UI/pages/doctor_schedule_screen.dart';
 import 'package:medica_admin/features/doctors/data/repos/doctor_repo.dart';
 import 'package:medica_admin/features/doctors/logic/doctor_cubit/doctor_cubit.dart';
+import 'package:medica_admin/features/salaries/UI/pages/create_salary_screen.dart';
 import 'routes.dart';
 
 class AppRouter {
