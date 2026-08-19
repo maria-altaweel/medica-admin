@@ -30,6 +30,7 @@ abstract class SecretaryDialogs {
             }
           },
           child: Dialog(
+            backgroundColor: AppColors.scaffoldBackground,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

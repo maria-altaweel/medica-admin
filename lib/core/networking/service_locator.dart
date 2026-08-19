@@ -1,12 +1,14 @@
 import 'package:get_it/get_it.dart';
-import 'package:http/http.dart';
 import 'package:medica_admin/core/networking/api_service.dart';
 import 'package:medica_admin/features/Auth/data/repos/auth_repo.dart';
 import 'package:medica_admin/features/Auth/data/repos/auth_repo_imp.dart';
 import 'package:medica_admin/features/Auth/logic/auth_bloc/auth_bloc.dart';
+import 'package:medica_admin/features/ads/data/repos/ad_repo.dart';
+import 'package:medica_admin/features/ads/logic/ad_cubit/ad_cubit.dart';
+import 'package:medica_admin/features/articles/data/repos/article_repo.dart';
+import 'package:medica_admin/features/articles/logic/articles_cubit/articles_cubit.dart';
 import 'package:medica_admin/features/clinics/data/repos/clinic_repo.dart';
 import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart';
-
 import 'package:medica_admin/features/dashbord/data/repos/dashboard_repo.dart';
 import 'package:medica_admin/features/dashbord/logic/dashboardhome_bloc/dashboardhome_bloc.dart';
 import 'package:medica_admin/features/doctors/data/repos/doctor_repo.dart';
@@ -52,4 +54,21 @@ void setupServiceLocator() {
     () => SalaryRepoImpl(getIt<ApiService>()),
   );
   getIt.registerFactory(() => SalaryCubit(getIt<SalaryRepo>()));
+
+  // ==================== Ads (الإعلانات) ====================
+  getIt.registerLazySingleton<AdRepository>(
+    () => AdRepository(getIt<ApiService>()),
+  );
+
+  getIt.registerFactory<AdCubit>(() => AdCubit(getIt<AdRepository>()));
+
+  // 1. تسجيل الـ Repository الخاصة بالمقالات (إذا كانت تعتمد على ApiService)
+  getIt.registerLazySingleton<ArticlesRepository>(
+    () => ArticlesRepository(getIt<ApiService>()),
+  );
+
+  // 2. تسجيل الـ Cubit الخاص بالمقالات
+  getIt.registerFactory<ArticlesCubit>(
+    () => ArticlesCubit(getIt<ArticlesRepository>()),
+  );
 }

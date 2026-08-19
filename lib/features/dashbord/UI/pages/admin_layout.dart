@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medica_admin/core/helpers/app_colors.dart';
 import 'package:medica_admin/core/networking/service_locator.dart';
+import 'package:medica_admin/features/ads/UI/pages/ad_screen.dart';
+import 'package:medica_admin/features/ads/logic/ad_cubit/ad_cubit.dart';
+import 'package:medica_admin/features/articles/UI/pages/articles_screen.dart';
+import 'package:medica_admin/features/articles/logic/articles_cubit/articles_cubit.dart';
 import 'package:medica_admin/features/clinics/UI/pages/clinics_screen.dart';
 import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart';
 import 'package:medica_admin/features/dashbord/UI/pages/dashbord_page.dart';
@@ -60,10 +64,11 @@ class _AdminLayoutState extends State<AdminLayout> {
     // 2: الأطباء
     // 3: طلبات انضمام الأطباء
     // 4: طلبات الإجازة
-    // 5: قائمة الرواتب (جديد)
-    // 6: إنشاء رواتب (جديد)
-    // 7: السكرتارية (كان 6)
-    // 8: الإعدادات (كان 7)
+    // 5: قائمة الرواتب
+    // 6: إنشاء رواتب
+    // 7: السكرتارية
+    // 8: الإعلانات (الجديدة)
+    // 9: المقالات (الجديدة)
     final List<Widget> pages = [
       const DashboardHomeWrapper(),
       BlocProvider(
@@ -86,9 +91,7 @@ class _AdminLayoutState extends State<AdminLayout> {
         create: (context) => getIt<SalaryCubit>(),
         child: SalariesScreen(
           onNavigateToCreateSalary: () {
-            _onSidebarItemSelected(
-              6,
-            ); // الانتقال للتاب رقم 6 (صفحة إنشاء رواتب)
+            _onSidebarItemSelected(6);
           },
         ),
       ),
@@ -100,9 +103,16 @@ class _AdminLayoutState extends State<AdminLayout> {
         create: (context) => getIt<SecretaryCubit>(),
         child: const SecretariesScreen(),
       ), // 7
-      const Center(child: Text('صفحة الإعدادات')), // 8
-    ];
+      // 👇 8: الإعلانات (جاهزة للخطوة الجاية)
+      BlocProvider(create: (context) => getIt<AdCubit>(), child: AdsScreen()),
 
+      // 👇 9: المقالات
+      // 👇 9: المقالات
+      BlocProvider(
+        create: (context) => getIt<ArticlesCubit>(),
+        child: const ArticlesScreen(),
+      ),
+    ];
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -171,7 +181,8 @@ class _AdminLayoutState extends State<AdminLayout> {
                           icon: Icons.medical_services_outlined,
                           title: 'الأطباء',
                           isExpanded:
-                              _selectedIndex == 2 || _selectedIndex == 3,
+                              _selectedIndex == 2 ||
+                              _selectedIndex == 3, // تم التصحيح هنا
                           children: [
                             _buildSubSidebarItem(
                               'قائمة الأطباء',
@@ -192,13 +203,13 @@ class _AdminLayoutState extends State<AdminLayout> {
                           _selectedIndex == 4 && _currentCustomBody == null,
                           () => _onSidebarItemSelected(4),
                         ),
-
-                        // قائمة الرواتب (جديد)
+                        // قائمة الرواتب
                         _buildExpansionTile(
                           icon: Icons.payments_outlined,
                           title: 'الرواتب',
                           isExpanded:
-                              _selectedIndex == 5 || _selectedIndex == 6,
+                              _selectedIndex == 5 ||
+                              _selectedIndex == 6, // تم التصحيح هنا
                           children: [
                             _buildSubSidebarItem(
                               'قائمة الرواتب',
@@ -219,11 +230,25 @@ class _AdminLayoutState extends State<AdminLayout> {
                           _selectedIndex == 7 && _currentCustomBody == null,
                           () => _onSidebarItemSelected(7),
                         ),
-                        _buildSidebarItem(
-                          Icons.settings_outlined,
-                          'الإعدادات',
-                          _selectedIndex == 8 && _currentCustomBody == null,
-                          () => _onSidebarItemSelected(8),
+
+                        // 👇 قائمة المقالات والإعلانات الجديدة (مكان الإعدادات)
+                        _buildExpansionTile(
+                          icon: Icons.article_outlined, // أيقونة معبرة
+                          title: 'المقالات والإعلانات',
+                          isExpanded:
+                              _selectedIndex == 8 || _selectedIndex == 9,
+                          children: [
+                            _buildSubSidebarItem(
+                              'الإعلانات',
+                              _selectedIndex == 8 && _currentCustomBody == null,
+                              () => _onSidebarItemSelected(8),
+                            ),
+                            _buildSubSidebarItem(
+                              'المقالات',
+                              _selectedIndex == 9 && _currentCustomBody == null,
+                              () => _onSidebarItemSelected(9),
+                            ),
+                          ],
                         ),
                       ],
                     ),

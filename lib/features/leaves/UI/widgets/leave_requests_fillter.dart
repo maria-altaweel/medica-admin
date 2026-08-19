@@ -9,6 +9,7 @@ class LeaveRequestsFilterBar extends StatelessWidget {
   final String? dateTo;
   final ValueChanged<String?>? onDateFromChanged;
   final ValueChanged<String?>? onDateToChanged;
+  final VoidCallback onReset; // 👈 إضافة دالة إعادة الضبط
 
   const LeaveRequestsFilterBar({
     super.key,
@@ -19,6 +20,7 @@ class LeaveRequestsFilterBar extends StatelessWidget {
     this.dateTo,
     this.onDateFromChanged,
     this.onDateToChanged,
+    required this.onReset, // 👈 جعلها مطلوبة
   });
 
   Future<void> _selectDate(
@@ -30,22 +32,17 @@ class LeaveRequestsFilterBar extends StatelessWidget {
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      // 1. تخصيص ألوان التقويم ليطابق AppColors.primaryColor
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary:
-                  AppColors.primary, // اللون الأساسي للأززرار والدائرة المختارة
+              primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black,
             ),
             textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor:
-                    AppColors.primary, // ألوان النصوص (إلغاء وموافق) في التقويم
-              ),
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
             ),
           ),
           child: child!,
@@ -61,7 +58,6 @@ class LeaveRequestsFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 2. استخدام Theme لتطبيق لون AppColors.primaryColor على عناصر الـ Input بالكامل تلقائياً
     return Theme(
       data: Theme.of(context).copyWith(
         primaryColor: AppColors.primary,
@@ -106,7 +102,6 @@ class LeaveRequestsFilterBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
-                  // الحدود عند النقر تصبح بلون التطبيق الأساسي
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(
@@ -117,8 +112,7 @@ class LeaveRequestsFilterBar extends StatelessWidget {
                 ),
               ),
             ),
-
-            // 2. فلاتر التواريخ والحالة
+            // 2. فلاتر التواريخ والحالة وزر إعادة الضبط
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -187,6 +181,29 @@ class LeaveRequestsFilterBar extends StatelessWidget {
                       ),
                     ],
                     onChanged: onStatusChanged,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // 👈 زر إعادة الضبط الجديد
+                SizedBox(
+                  height: 45,
+                  child: TextButton.icon(
+                    onPressed: onReset,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey.shade700,
+                      backgroundColor: Colors.grey.shade100,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text(
+                      'إعادة ضبط',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
                 ),
               ],

@@ -4,9 +4,9 @@ import 'package:medica_admin/core/helpers/App_Colors.dart';
 import 'package:medica_admin/core/networking/service_locator.dart';
 import 'package:medica_admin/features/clinics/data/models/clinic_model.dart';
 import 'package:medica_admin/features/clinics/data/repos/clinic_repo.dart';
-import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart'; // 👈 أضفنا استدعاء البلوك
-import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_event.dart'; // 👈 أضفنا الحدث
-import 'package:medica_admin/features/doctors/ui/widgets/select_clinic_dialog.dart'; // 👈 ديلاوج العيادات الموحد
+import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_bloc.dart';
+import 'package:medica_admin/features/clinics/logic/clinic_bloc/clinic_event.dart';
+import 'package:medica_admin/features/doctors/ui/widgets/select_clinic_dialog.dart';
 import 'package:medica_admin/features/leaves/UI/widgets/leave_requests_details_panel.dart';
 import 'package:medica_admin/features/leaves/UI/widgets/leave_requests_fillter.dart';
 import 'package:medica_admin/features/leaves/UI/widgets/leave_requests_header.dart';
@@ -68,7 +68,18 @@ class _LeaveRequestsScreenState extends State<LeaveRequestsScreen> {
     );
   }
 
-  // 👇 دالة فتح نافذة اختيار العيادة باستخدام الديالوج الجديد الموحد
+  // 👇 دالة إعادة ضبط الفلاتر بالكامل وتصفير القيم
+  void _resetFilters() {
+    setState(() {
+      selectedStatus = null;
+      searchQuery = '';
+      dateFrom = null;
+      dateTo = null;
+    });
+    _fetchLeaveRequests();
+  }
+
+  // دالة فتح نافذة اختيار العيادة باستخدام الديالوج الجديد الموحد
   void _openSelectClinicDialog(BuildContext currentContext) {
     showDialog(
       context: currentContext,
@@ -90,14 +101,18 @@ class _LeaveRequestsScreenState extends State<LeaveRequestsScreen> {
 
   // فتح نافذة التفاصيل والإجراءات بشكل منبثق واحترافي (Dialog)
   void _showLeaveDetailsDialog(LeaveModel leave) {
+    final parentContext = context;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        content: SizedBox(
-          width: 700,
-          child: LeaveRequestDetailsPanel(
-            selectedLeave: leave,
-            currentClinic: currentClinic!,
+      builder: (dialogContext) => BlocProvider.value(
+        value: parentContext.read<LeaveCubit>(),
+        child: AlertDialog(
+          content: SizedBox(
+            width: 700,
+            child: LeaveRequestDetailsPanel(
+              selectedLeave: leave,
+              currentClinic: currentClinic!,
+            ),
           ),
         ),
       ),
@@ -112,13 +127,13 @@ class _LeaveRequestsScreenState extends State<LeaveRequestsScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
     if (currentClinic == null || clinics.isEmpty) {
       return const Scaffold(
         backgroundColor: AppColors.pageBackground,
         body: Center(child: Text('لا توجد عيادات متاحة حالياً')),
       );
     }
+
     return Scaffold(
       backgroundColor: AppColors.pageBackground,
       body: Padding(
@@ -126,7 +141,7 @@ class _LeaveRequestsScreenState extends State<LeaveRequestsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. الهيدر مع تمرير دالة فتح الديالوج الجديدة بأمان
+            // 1. الهيدر
             LeaveRequestsHeader(
               currentClinic: currentClinic!,
               clinics: clinics,
@@ -137,10 +152,11 @@ class _LeaveRequestsScreenState extends State<LeaveRequestsScreen> {
                 _fetchLeaveRequests();
               },
               onOpenClinicDialog: () => _openSelectClinicDialog(context),
+              onRefresh: _fetchLeaveRequests,
             ),
             const SizedBox(height: 20),
 
-            // 2. شريط الفلاتر والبحث والتواريخ
+            // 2. شريط الفلاتر والبحث والتواريخ مع تمرير onReset
             LeaveRequestsFilterBar(
               selectedStatus: selectedStatus,
               dateFrom: dateFrom,
@@ -160,16 +176,16 @@ class _LeaveRequestsScreenState extends State<LeaveRequestsScreen> {
                 setState(() => dateTo = date);
                 _fetchLeaveRequests();
               },
+              onReset: _resetFilters, // 👈 أضيفت هنا بنجاح وبدون أخطاء
             ),
             const SizedBox(height: 20),
 
-            // 3. الجدول يمتد بعرض الشاشة بالكامل (Full Width)
+            // 3. الجدول بعرض الشاشة الكامل مع زر إعادة التحميل عند الأخطاء
             Expanded(
               child: LeaveRequestsTableCard(
                 searchQuery: searchQuery,
                 selectedLeave: null,
                 onLeaveSelected: (leave) {
-                  // عند الضغط على زر العين، يتم فتح التفاصيل في نافذة منبثقة Dialog
                   _showLeaveDetailsDialog(leave);
                 },
                 onRefreshNeeded: () {

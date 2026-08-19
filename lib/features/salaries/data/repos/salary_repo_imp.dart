@@ -15,7 +15,6 @@ class SalaryRepoImpl implements SalaryRepo {
     String? periodStart,
     String? periodEnd,
   }) async {
-    // بناء الرابط مع الـ Query Parameters يدوياً بما أن دالة get لا تدعمها
     String url = 'admin/salaries?';
     if (clinicId != null) url += 'clinic_id=$clinicId&';
     if (doctorId != null) url += 'doctor_id=$doctorId&';
@@ -23,23 +22,30 @@ class SalaryRepoImpl implements SalaryRepo {
     if (periodStart != null) url += 'period_start=$periodStart&';
     if (periodEnd != null) url += 'period_end=$periodEnd&';
 
-    // إزالة آخر حرف '&' أو '?' إذا لم يكن هناك بارامترات
     if (url.endsWith('&') || url.endsWith('?')) {
       url = url.substring(0, url.length - 1);
     }
 
     final response = await _apiService.get(url);
 
-    final List data = response['data'];
+    // التعديل هنا: حماية ضد الـ null إذا جاءت القائمة فارغة
+    final List data = response['data'] ?? [];
     return data.map((e) => SalaryPayoutModel.fromJson(e)).toList();
   }
 
   @override
   Future<SalaryPayoutModel> getSalaryDetails(int id) async {
     final response = await _apiService.get('admin/salaries/$id');
-    final salaryData = response['data']['salary'];
-    salaryData['breakdown'] = response['data']['breakdown'];
-    salaryData['payments'] = response['data']['payments'];
+    final responseData = response['data'] ?? {};
+    final salaryData = responseData['salary'] ?? responseData;
+
+    if (responseData['breakdown'] != null) {
+      salaryData['breakdown'] = responseData['breakdown'];
+    }
+    if (responseData['payments'] != null) {
+      salaryData['payments'] = responseData['payments'];
+    }
+
     return SalaryPayoutModel.fromJson(salaryData);
   }
 
@@ -55,13 +61,17 @@ class SalaryRepoImpl implements SalaryRepo {
       'period_end': periodEnd,
     });
 
-    final List data = response['data'];
+    final List data = response['data'] ?? [];
     return data.map((e) => SalaryPayoutModel.fromJson(e)).toList();
   }
 
   @override
   Future<SalaryPayoutModel> approveSalary(int id) async {
+    // إرسال الطلب بالطريقة الصحيحة للرابط
     final response = await _apiService.post('admin/salaries/$id/approve', {});
-    return SalaryPayoutModel.fromJson(response['data']);
+
+    // التقاط الـ data المختصرة التي يرسلها الباك إند عند الاعتماد
+    final responseData = response['data'] ?? response;
+    return SalaryPayoutModel.fromJson(responseData);
   }
 }

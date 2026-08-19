@@ -75,6 +75,24 @@ class ApiService {
     }
   }
 
+  Future<dynamic> patch(String endpoint, {Object? body, String? token}) async {
+    try {
+      final headers = await _getHeaders(token);
+
+      final response = await http.patch(
+        Uri.parse("$baseUrl/$endpoint"),
+        headers: headers,
+        // إذا كان الـ body فارغ لا نرسله كـ null حتى لا يضرب jsonEncode
+        body: body != null ? jsonEncode(body) : null,
+      );
+      return _handleResponse(response);
+    } on http.ClientException {
+      throw Exception("فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً");
+    } catch (e) {
+      throw Exception(e.toString().replaceAll("Exception: ", ""));
+    }
+  }
+
   // دالة DELETE
   Future<dynamic> delete(String endpoint, {String? token}) async {
     try {

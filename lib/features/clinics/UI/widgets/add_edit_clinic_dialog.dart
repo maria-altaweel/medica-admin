@@ -119,6 +119,7 @@ class _AddEditClinicDialogState extends State<AddEditClinicDialog> {
         }
       },
       child: Dialog(
+        backgroundColor: AppColors.scaffoldBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           width: 520,

@@ -181,36 +181,8 @@ class ClinicsOverviewTableWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
+
           // زر "عرض جميع العيادات"
-          Center(
-            child: OutlinedButton.icon(
-              onPressed: onShowAllClinics,
-              icon: const Icon(
-                Icons.arrow_back,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              label: const Text(
-                'عرض جميع العيادات',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                backgroundColor: AppColors.textField,
-                side: const BorderSide(color: AppColors.borderColor, width: 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

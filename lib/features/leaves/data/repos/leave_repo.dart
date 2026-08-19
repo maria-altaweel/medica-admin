@@ -42,9 +42,7 @@ class LeaveRepository {
     required int clinicId,
     required int id,
   }) async {
-    final response = await _apiService.get(
-      "admin/clinics/$clinicId/leave-requests/$id",
-    );
+    final response = await _apiService.get("admin/clinics/$clinicId/leave/$id");
     // الكونترولر يرجع 'data' ككائن واحد
     return LeaveModel.fromJson(response['data']);
   }
@@ -56,7 +54,7 @@ class LeaveRepository {
     required int id,
   }) async {
     return await _apiService.put(
-      "admin/clinics/$clinicId/leave-requests/$id/approve",
+      "admin/clinics/$clinicId/leaves/$id/approve",
       body: {}, // الكونترولر لا يحتاج body خاص للموافقة
     );
   }
@@ -68,7 +66,7 @@ class LeaveRepository {
     required int id,
   }) async {
     return await _apiService.put(
-      "admin/clinics/$clinicId/leave-requests/$id/reject",
+      "admin/clinics/$clinicId/leaves/$id/reject",
       body: {},
     );
   }

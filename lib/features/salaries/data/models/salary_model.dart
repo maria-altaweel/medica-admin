@@ -19,12 +19,18 @@ class SalaryPayoutModel {
 
   factory SalaryPayoutModel.fromJson(Map<String, dynamic> json) {
     return SalaryPayoutModel(
-      id: json['id'],
-      clinic: ClinicModel.fromJson(json['clinic']),
-      doctor: DoctorModel.fromJson(json['doctor']),
+      id: json['id'] ?? 0,
+      // إذا كانت غير موجودة برد الاعتماد، ضع لها قيمة افتراضية حتى لا يحدث الانهيار
+      clinic: json['clinic'] != null
+          ? ClinicModel.fromJson(json['clinic'])
+          : ClinicModel(id: 0, name: ''),
+      doctor: json['doctor'] != null
+          ? DoctorModel.fromJson(json['doctor'])
+          : DoctorModel(id: 0, name: ''),
       financials: SalaryFinancialsModel.fromJson(
-        json['financials'] ?? json['salary'] ?? {},
+        json['financials'] ?? json['salary'] ?? json,
       ),
+      // باقي الحقول...
       audit: json['audit'] != null
           ? SalaryAuditModel.fromJson(json['audit'])
           : null,
