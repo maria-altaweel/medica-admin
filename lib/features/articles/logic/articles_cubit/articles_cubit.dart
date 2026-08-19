@@ -105,7 +105,7 @@ class ArticlesCubit extends Cubit<ArticlesState> {
   // 4. تعديل مقال
   Future<void> updateArticle({
     required int articleId,
-    required int clinicId, // 👈 أضفنا رقم العيادة هنا
+    required int clinicId,
     String? title,
     String? summary,
     String? content,
@@ -116,7 +116,7 @@ class ArticlesCubit extends Cubit<ArticlesState> {
     try {
       await _articlesRepo.updateArticle(
         articleId: articleId,
-        clinicId: clinicId, // 👈 تمريرها للـ Repository
+        clinicId: clinicId,
         title: title,
         summary: summary,
         content: content,

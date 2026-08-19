@@ -8,7 +8,7 @@ class Appsnackbar {
       Overlay.of(context),
       Center(
         child: SizedBox(
-          width: 450, // تحديد العرض المناسب للويب والديسكتوب
+          width: 450,
           child: CustomSnackBar.error(
             message: message,
             backgroundColor: const Color(0xFFFF5252),
@@ -29,7 +29,7 @@ class Appsnackbar {
       Overlay.of(context),
       Center(
         child: SizedBox(
-          width: 450, // تحديد العرض المناسب للويب والديسكتوب
+          width: 450,
           child: CustomSnackBar.success(
             message: message,
             backgroundColor: const Color(0xFF4CAF50),

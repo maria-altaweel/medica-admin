@@ -13,22 +13,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._authRepo) : super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
   }
-
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(LoginLoading());
     try {
       // 1. محاولة تسجيل الدخول عبر الـ Repo
       final adminModel = await _authRepo.login(event.phone, event.password);
 
-      // 2. 🔑 حفظ التوكن في SharedPreferences قبل الانتقال (عدّل اسم الخاصية حسب موديلك token أو token)
-      if (adminModel.token != null) {
+      // 🔬 طباعة للتأكد من شكل وجدوى التوكن القادم من الـ API
+      print("==== API Token Value: ${adminModel.token} ====");
+
+      // 2. التحقق من أن التوكن ليس null وليس فارغاً
+      if (adminModel.token != null && adminModel.token!.isNotEmpty) {
         await SharedPrefHelper.saveAdminToken(adminModel.token!);
+        print("==== Token Saved Successfully in SharedPref! ====");
+      } else {
+        print("==== Error: Token is NULL or EMPTY from API response! ====");
       }
 
       // 3. إرسال حالة النجاح للـ UI
       emit(LoginSuccess(adminModel: adminModel));
     } catch (e) {
-      // إذا حدث خطأ سنرسل نص الخطأ ليتم عرضه في الـ UI
+      print("==== Login Exception: $e ====");
       emit(LoginError(message: e.toString()));
     }
   }

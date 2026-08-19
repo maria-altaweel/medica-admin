@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:medica_admin/core/helpers/app_colors.dart';
 import 'package:medica_admin/features/articles/UI/widgets/add_articles_dialog.dart';
+import 'package:medica_admin/features/articles/UI/widgets/articles_details_dialog.dart';
 import 'package:medica_admin/features/articles/data/models/article_model.dart';
 import 'package:medica_admin/features/articles/logic/articles_cubit/articles_cubit.dart';
 
@@ -126,25 +127,36 @@ class ArticlesTable extends StatelessWidget {
                         children: [
                           IconButton(
                             icon: const Icon(
+                              Icons.visibility,
+                              color: Colors.blue,
+                            ),
+                            onPressed: () {
+                              final cubit = context.read<ArticlesCubit>();
+                              showDialog(
+                                context: context,
+                                builder: (dialogContext) => BlocProvider.value(
+                                  value: cubit,
+                                  child: ArticleDetailsDialog(
+                                    article: article,
+                                  ), // سننشئ هذا الملف بالخطوة الثانية
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(
                               Icons.edit_outlined,
                               color: Colors.blue,
                               size: 20,
                             ),
                             onPressed: () {
-                              // فتح ديلاوغ التعديل وتمرير المقال الحالي
                               showDialog(
                                 context: context,
                                 builder: (_) => BlocProvider.value(
-                                  value: context
-                                      .read<
-                                        ArticlesCubit
-                                      >(), // تمرير الكيوبت الحالي للديالوج
+                                  value: context.read<ArticlesCubit>(),
                                   child: AddArticleDialog(
-                                    article:
-                                        article, // تمرير بيانات المقال ليعرف الديالوغ أنه في وضع التعديل
-                                    onOpenClinicDialog: (onClinicSelected) {
-                                      // هنا يمكنك وضع منطق فتح ديلاوغ العيادات إذا احتجت
-                                    },
+                                    article: article,
+                                    onOpenClinicDialog: (onClinicSelected) {},
                                   ),
                                 ),
                               );

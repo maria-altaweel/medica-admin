@@ -118,9 +118,9 @@ class ArticlesRepository {
     required int articleId,
     required String status,
   }) async {
-    final response = await _apiService.post(
+    final response = await _apiService.patch(
       "admin/articles/$articleId/status",
-      {'status': status},
+      body: {'status': status},
     );
     return ArticleModel.fromJson(response['data']);
   }
