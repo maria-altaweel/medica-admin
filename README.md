@@ -1,16 +1,64 @@
-# medica_admin
+# 🏥 Medica Admin Dashboard
 
-A new Flutter project.
+Admin dashboard for the Medica medical clinic management system, built with Flutter.
 
-## Getting Started
+## 📋 About the Project
 
-This project is a starting point for a Flutter application.
+Medica is a medical clinic management system designed to connect patients, doctors, secretaries, and administrators through a unified platform.
 
-A few resources to get you started if this is your first Flutter project:
+This repository contains the Admin Dashboard, which provides administrators with tools to manage clinics, doctors, secretaries, content, salaries, and other system operations.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## ✨ Features
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- 🔐 Admin authentication
+- 📊 Dashboard and system analytics
+- 🏥 Clinic management
+- 👨‍⚕️ Doctor management
+- 📅 Doctor leave management
+- 👩‍💼 Secretary management
+- 💰 Salary management
+- 📰 Article management
+- 📢 Advertisement management
+- ✏️ Create, edit, and delete articles and advertisements
+- 📌 Article publishing status: Draft, Published, and Archived
+- ⏸️ Pause advertisements without deleting them
+
+## 🛠️ Technologies
+
+- Flutter
+- Dart
+- BLoC / Cubit
+- REST API
+- Laravel Backend
+
+## 🏗️ Architecture
+
+The project follows a feature-based architecture. Each feature is organized into separate layers:
+
+- UI — Screens and user interface components
+- Logic — BLoC/Cubit for state management and business logic
+- Data — Data sources, models, and API-related operations
+
+This separation keeps the presentation, application logic, and data handling organized and maintainable.
+
+## 📂 Project Structure
+
+The project is organized by features, including:
+
+- auth
+- dashboard
+- clinics
+- doctors
+- leaves
+- salaries
+- secretaries
+- articles
+- ads
+
+## 🔗 Part of the Medica System
+
+The Admin Dashboard is one component of the Medica medical clinic management system, alongside the patient mobile application and backend services.
+
+## 👩‍💻 Contributors
+
+Developed as part of a university team project.
